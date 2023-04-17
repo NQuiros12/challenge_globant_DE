@@ -1,10 +1,8 @@
-from db import Connector
 from fastapi import File, UploadFile
 import pandas as pd
 import sqlalchemy as sa
-from sqlalchemy import create_engine, ForeignKey
+from sqlalchemy import create_engine
 import os
-
 DB_USER = "root"
 DB_PASSWORD = "micolash12"
 DB_HOST = "localhost"
@@ -12,8 +10,6 @@ DATABASE = "globant_db"
 DB_PORT = 3306
 connect_string = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DATABASE}?charset=utf8"
 engine = create_engine(connect_string)
-
-# connector = Connector(DATABASE, DB_HOST, DB_USER, DB_USER,DB_PASSWORD, DB_PORT)
 # Create the connection up and running
 def get_all_files(dir: str) -> list:
     # Return all files names from the data dir without extension
@@ -23,20 +19,15 @@ def get_all_files(dir: str) -> list:
     )
     return files
 
+async def upload_csv(file: UploadFile = File(...))->str:
+    # create a path to store the file in the data directory
+    file_path = os.path.join("data", file.filename)
 
-async def get_all(table_name: str) -> list:
-    try:
-        connector.get_connection()
-        cursor = connector.cursor(dictionary=True)
-        cursor.execute("select * from %s" % (table_name))
-        rows = cursor.fetchall()
-        return rows
-    except mysql.connector.Error as e:
-        return JSONResponse(
-            status_code=500, content={"message": "Error connecting to database"}
-        )
+    # open the file and write the contents to the specified path
+    with open(file_path, "wb") as buffer:
+        buffer.write(await file.read())
 
-
+    return {"filename": file.filename}
 # Create the service of reading the csv
 def read_csv(file: UploadFile = File()) -> pd.DataFrame:
     df = pd.read_csv(file)
@@ -44,8 +35,7 @@ def read_csv(file: UploadFile = File()) -> pd.DataFrame:
 
 
 # Upload the file to the database (batch)
-def upload_csv(df: pd.DataFrame, table_name: str) -> None:
-    
+def upload_df_to_sql(df: pd.DataFrame, table_name: str) -> None:
 
     # Use the built-in function 'to_sql' to write the dataframe to the database
     df.to_sql(table_name, engine, if_exists="append",
