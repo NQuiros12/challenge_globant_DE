@@ -101,3 +101,23 @@ def batch_upload():
     [add_constraints(Path(file_path).stem)for file_path in file_paths]
     # and in the case of 'hired_employees' we add also a foreign key constraint
     add_fk()
+def employees_x_job_department_2021():
+    query = """
+        select  
+            d.department,
+		    j.job,
+            QUARTER(h.`datetime`) as quarter_id,
+            count(0) as hires
+        from hired_employees h
+        inner join jobs j 
+            on h.job_id = j.job_id
+        inner join departments d
+            on h.department_id = d.department_id
+        where year(h.datetime) = 2021
+        group by d.department,j.job,  QUARTER(h.`datetime`)
+        order by d.department,d.department ASC;"""
+    with engine.connect() as con:
+        result = con.execute(sa.text(query))
+        keys = ["department", "job", "quarter_id", "hires"]
+        rows = [dict(zip(keys, row)) for row in result.fetchall()]
+    return rows
