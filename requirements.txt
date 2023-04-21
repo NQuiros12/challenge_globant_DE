@@ -1,5 +1,6 @@
 fastapi
 uvicorn[standard]
+python-multipart #This is used to create and parse HTTP multipart requests
 sqlalchemy
 PyMySQL
 pandas

@@ -1,6 +1,7 @@
 from fastapi import File, UploadFile
 import pandas as pd
 import sqlalchemy as sa
+from pathlib import Path
 from sqlalchemy import create_engine
 import os
 DB_USER = "root"
@@ -54,4 +55,15 @@ def add_constraints(table_name:str)->None:
             con.execute(sa.text(
                 f"ALTER TABLE {table_name} ADD CONSTRAINT job_fk FOREIGN KEY(job_id) references jobs_t(id)"
             ))
-        
+
+def batch_upload():
+    #Read all the csv files in the 'data' directory
+    file_paths = [f"data/{filename}.csv" for filename in get_all_files("data")]
+    #Re arrange the file paths in order to execute first with 'jobs' and 'departments' and after the
+    # 'hired_employees' since the last one depends on the others.
+    file_paths[1], file_paths[-1] = file_paths[-1], file_paths[1]
+
+    # Bring all the files and upload to the sql database
+    [upload_df_to_sql(read_csv(file_path),Path(file_path).stem ) for file_path in file_paths]
+    #Add the constraints to the sql database
+    [add_constraints(Path(file_path).stem)for file_path in file_paths]
