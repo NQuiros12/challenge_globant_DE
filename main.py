@@ -20,6 +20,13 @@ async def test_connection():
 def upload(files: List[UploadFile] = File(...)):
     for file in files:
         with open("./data/"+file.filename, "wb") as buffer:
-            shutil.copyfileobj(fsrc = file.file,fdst= buffer)  
-    data = {"message": f"file.filename successfully uploaded"}     
+            shutil.copyfileobj(fsrc=file.file, fdst=buffer)
+    data = {"message": f"{file.filename} successfully uploaded"}
     return JSONResponse(content=data, status_code=200)
+
+
+@app.get("/batch_sql")
+async def batch_sql():
+    _services.batch_upload()
+    data = {"message": "Batch successfully uploaded"}
+    return JSONResponse(content = data, status_code = 200)
