@@ -29,7 +29,14 @@ def upload(files: List[UploadFile] = File(...)):
 async def batch_sql():
     _services.batch_upload()
     data = {"message": "Batch successfully uploaded"}
-    return JSONResponse(content = data, status_code = 200)
+    return JSONResponse(content=data, status_code=200)
+
+
 @app.get("/query1")
 async def query1():
     return _services.employees_x_job_department_2021()
+
+
+@app.get("/query2")
+async def query2():
+    return _services.number_hireds_by_department()

@@ -5,40 +5,58 @@ from pathlib import Path
 from sqlalchemy import create_engine
 import os
 import datetime as dt
+import configparser
 
+# Read the config file
+config = configparser.ConfigParser()
+config.read('database.ini')
+
+# Get the database host
+host = config['database']['host']
+
+# Get the database port
+port = config['database']['port']
+
+# Get the database name
+database = config['database']['database']
+
+# Get the database user
+user = config['database']['user']
+
+# Get the database password
+password = config['database']['password']
 schema_hired = {
-    "id":"Int64",
-    "name":"object",
-    "datetime" : "object",
-    "department_id":"Int64",
-    "job_id":"Int64"
+    "id": "Int64",
+    "name": "object",
+    "datetime": "object",
+    "department_id": "Int64",
+    "job_id": "Int64"
 }
 
 
 schema_jobs = {
-    "job_id":"Int64",
-    "job":"object"
+    "job_id": "Int64",
+    "job": "object"
 }
 schema_department = {
-    "department_id":"Int64",
-    "department":"object"
+    "department_id": "Int64",
+    "department": "object"
 }
-schemas = [schema_hired,schema_jobs,schema_department]
+schemas = [schema_hired, schema_jobs, schema_department]
 
-DB_USER = "root"
-DB_PASSWORD = "micolash12"
-DB_HOST = "localhost"
-DATABASE = "globant_db"
-DB_PORT = 3306
-connect_string = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DATABASE}?charset=utf8"
+connect_string = f"mysql+pymysql://{user}:{password}@{host}:{port}/{database}?charset=utf8"
 engine = create_engine(connect_string)
 # Create the connection up and running
+
+
 def get_all_files(dir: str) -> list:
     # Return all files names from the data dir without extension
-    files = [f.replace(".csv", "") for f in os.listdir(dir) if not f.startswith('.')]
+    files = [f.replace(".csv", "")
+             for f in os.listdir(dir) if not f.startswith('.')]
     return files
 
-async def upload_csv(file: UploadFile = File(...))->str:
+
+async def upload_csv(file: UploadFile = File(...)) -> str:
     # create a path to store the file in the data directory
     file_path = os.path.join("data", file.filename)
 
@@ -48,12 +66,15 @@ async def upload_csv(file: UploadFile = File(...))->str:
 
     return {"filename": file.filename}
 # Create the service of reading the csv
-def read_csv_cust(schema:str,file:str) -> pd.DataFrame:
+
+
+def read_csv_cust(schema: str, file: str) -> pd.DataFrame:
     if "hired_employees" in file:
-        df = pd.read_csv(file,names=schema_hired.keys(),dtype=schema_hired)
-        df["datetime"] = pd.to_datetime(df["datetime"])#,parse_dates=["datetime"]
+        df = pd.read_csv(file, names=schema_hired.keys(), dtype=schema_hired)
+        df["datetime"] = pd.to_datetime(
+            df["datetime"])  # ,parse_dates=["datetime"]
         return df
-    df = pd.read_csv(file,names=schema.keys(),dtype=schema)
+    df = pd.read_csv(file, names=schema.keys(), dtype=schema)
     return df
 
 
@@ -65,42 +86,53 @@ def upload_df_to_sql(df: pd.DataFrame, table_name: str) -> None:
               index=False, chunksize=1000)
     print(f"{table_name} csv upload to database")
     return None
-def add_constraints(table_name:str)->None:
+
+
+def add_constraints(table_name: str) -> None:
     # Use the engine to write the primary key constraint to the database
     add_pk(table_name)
-    
 
-def add_fk(table_name:str="hired_employees")->None:
+
+def add_fk(table_name: str = "hired_employees") -> None:
     with engine.connect() as con:
         con.execute(sa.text(
-                f"ALTER TABLE hired_employees ADD CONSTRAINT department_id FOREIGN KEY(department_id) references departments(department_id)"
-            ))
+            f"ALTER TABLE hired_employees ADD CONSTRAINT department_id FOREIGN KEY(department_id) references departments(department_id)"
+        ))
         con.execute(sa.text(
-                f"ALTER TABLE hired_employees ADD CONSTRAINT job_id FOREIGN KEY(job_id) references jobs(job_id)"
-            ))
-def add_pk(table_name:str) -> None:
+            f"ALTER TABLE hired_employees ADD CONSTRAINT job_id FOREIGN KEY(job_id) references jobs(job_id)"
+        ))
+
+
+def add_pk(table_name: str) -> None:
     with engine.connect() as con:
         if ("hired_employees" not in table_name):
-            con.execute(sa.text(f"alter table {table_name} add primary key ({table_name[:-1]}_id);"))
-            print(f"alter table {table_name} add primary key ({table_name[:-1]}_id);")
+            con.execute(
+                sa.text(f"alter table {table_name} add primary key ({table_name[:-1]}_id);"))
+            print(
+                f"alter table {table_name} add primary key ({table_name[:-1]}_id);")
             return None
         else:
-            con.execute(sa.text(f"alter table hired_employees add primary key (id);"))
+            con.execute(
+                sa.text(f"alter table hired_employees add primary key (id);"))
             return None
-        
+
 
 def batch_upload():
-    
-    #Read all the csv files in the 'data' directory
-    file_paths = [f"./data/{filename}.csv" for filename in get_all_files("data")]
-    #Re arrange the file paths in order to execute first with 'jobs' and 'departments' and after the
+
+    # Read all the csv files in the 'data' directory
+    file_paths = [
+        f"./data/{filename}.csv" for filename in get_all_files("data")]
+    # Re arrange the file paths in order to execute first with 'jobs' and 'departments' and after the
     # 'hired_employees' since the last one depends on the others.
     file_paths[1], file_paths[-1] = file_paths[-1], file_paths[1]
-    [upload_df_to_sql(read_csv_cust(schema=schema,file = file_path),Path(file_path).stem ) for file_path,schema in zip(file_paths,schemas)]
-    #Add the constraints to the sql database
+    [upload_df_to_sql(read_csv_cust(schema=schema, file=file_path), Path(
+        file_path).stem) for file_path, schema in zip(file_paths, schemas)]
+    # Add the constraints to the sql database
     [add_constraints(Path(file_path).stem)for file_path in file_paths]
     # and in the case of 'hired_employees' we add also a foreign key constraint
     add_fk()
+
+
 def employees_x_job_department_2021():
     query = """
         select  
@@ -119,5 +151,33 @@ def employees_x_job_department_2021():
     with engine.connect() as con:
         result = con.execute(sa.text(query))
         keys = ["department", "job", "quarter_id", "hires"]
+        rows = [dict(zip(keys, row)) for row in result.fetchall()]
+    return rows
+
+
+def number_hireds_by_department():
+    query = """
+        select
+	d.department_id ,
+	d.department,
+	count(*) as number_hired
+	from hired_employees h
+	inner join departments d
+		on h.department_id = d.department_id
+	where year(h.datetime) = 2021
+	group by d.department_id, d.department
+	having number_hired > (
+			select avg(c.contador)
+			from (
+				select count(*) as contador
+				from hired_employees h
+				inner join departments d
+					on h.department_id = d.department_id
+				where year(h.datetime) = 2021
+				group by d.department_id
+			) as c);"""
+    with engine.connect() as con:
+        result = con.execute(sa.text(query))
+        keys = ["id_department", "department", "hires"]
         rows = [dict(zip(keys, row)) for row in result.fetchall()]
     return rows
