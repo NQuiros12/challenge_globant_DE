@@ -121,7 +121,7 @@ def batch_upload():
 
     # Read all the csv files in the 'data' directory
     file_paths = [
-        f"./data/{filename}.csv" for filename in get_all_files("data")]
+        f"../data/{filename}.csv" for filename in get_all_files("../data")]
     # Re arrange the file paths in order to execute first with 'jobs' and 'departments' and after the
     # 'hired_employees' since the last one depends on the others.
     file_paths[1], file_paths[-1] = file_paths[-1], file_paths[1]
@@ -155,27 +155,46 @@ def employees_x_job_department_2021():
     return rows
 
 
+def duplicates_tb() -> int:
+    query = """select
+                    count(*)
+                from
+                    hired_employees
+                where
+                    id in ( select id from
+                            ( select
+                                id,
+                                row_number() over (partition by id order by id) as rn
+                                from
+                                hired_employees
+                                ) t
+                where
+                rn > 1
+                );"""
+    with engine.connect() as con:
+        result = con.execute(sa.text(query))
+        return result.fetchone()[0]
+
+
 def number_hireds_by_department():
     query = """
-        select
-	d.department_id ,
-	d.department,
-	count(*) as number_hired
-	from hired_employees h
-	inner join departments d
-		on h.department_id = d.department_id
-	where year(h.datetime) = 2021
-	group by d.department_id, d.department
-	having number_hired > (
-			select avg(c.contador)
-			from (
-				select count(*) as contador
+       with base as(
+				select 
+                d.department_id,
+                d.department,
+                count(*) as number_hired
 				from hired_employees h
 				inner join departments d
 					on h.department_id = d.department_id
 				where year(h.datetime) = 2021
-				group by d.department_id
-			) as c);"""
+				group by d.department_id)
+        select
+	        *
+	    from base
+	    where number_hired > (
+			        select avg(number_hired)
+			        from base
+                    )"""
     with engine.connect() as con:
         result = con.execute(sa.text(query))
         keys = ["id_department", "department", "hires"]

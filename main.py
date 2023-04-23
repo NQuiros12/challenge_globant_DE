@@ -40,3 +40,7 @@ async def query1():
 @app.get("/query2")
 async def query2():
     return _services.number_hireds_by_department()
+
+@app.get("/duplicates")
+async def duplicate():
+    return _services.duplicates_tb()

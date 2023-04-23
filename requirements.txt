@@ -5,3 +5,6 @@ sqlalchemy
 PyMySQL
 pandas
 mysql-connector-python
+#Testing
+pytest
+httpx
