@@ -176,6 +176,12 @@ def duplicates_tb() -> int:
         return result.fetchone()[0]
 
 
+def table_has_rows(table_name:str):
+    query=f"""SELECT EXISTS(SELECT * FROM {table_name});"""
+    with engine.connect() as con:
+        result = con.execute(sa.text(query))
+        return result.fetchone()[0]
+
 def number_hireds_by_department():
     query = """
        with base as(
