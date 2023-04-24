@@ -17,7 +17,7 @@ def test_test_connection():
 
 def test_upload_csv():
     url = 'http://localhost:8000/upload_csv'
-    files = {'files': ('test.csv', open('./test.csv', 'rb'), 'text/csv')}
+    files = {'files': ('test.csv', open('./test/test.csv', 'rb'), 'text/csv')}
     response = requests.post(url, files=files)
     assert response.status_code == 200
 
@@ -30,7 +30,6 @@ def test_has_rows():
 def test_query1():
     response = client.get("/query1")
     assert response.status_code == 200
-    # Add assertions for the expected results of the query
 
 def test_query2():
     response = client.get("/query2")
