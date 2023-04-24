@@ -44,3 +44,9 @@ async def query2():
 @app.get("/duplicates")
 async def duplicate():
     return _services.duplicates_tb()
+@app.get("/departments")
+async def get_departments():
+    return _services.get_all_departments()
+@app.get("/employees")
+async def get_employees():
+    return _services.get_all_employees()

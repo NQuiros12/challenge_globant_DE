@@ -206,14 +206,14 @@ def number_hireds_by_department():
         keys = ["id_department", "department", "hires"]
         rows = [dict(zip(keys, row)) for row in result.fetchall()]
     return rows
-def get_all_employees(tablename:str):
+def get_all_employees():
     query = f""" select * from hired_employees;"""
     with engine.connect() as con:
         result = con.execute(sa.text(query))
         keys = ["id", "name", "datetime","department_id","job_id"]
         rows = [dict(zip(keys, row)) for row in result.fetchall()]
     return rows
-def get_all_departments(tablename:str):
+def get_all_departments():
     query = f""" select * from departments;"""
     with engine.connect() as con:
         result = con.execute(sa.text(query))
