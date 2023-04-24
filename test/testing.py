@@ -23,7 +23,10 @@ def test_upload_csv():
 
 def test_duplicates_sql():
     assert services.duplicates_tb() == 0
-
+def test_has_rows():
+    assert services.table_has_rows("hired_employees") == 1
+    assert services.table_has_rows("jobs") == 1
+    assert services.table_has_rows("departments") == 1
 def test_query1():
     response = client.get("/query1")
     assert response.status_code == 200
