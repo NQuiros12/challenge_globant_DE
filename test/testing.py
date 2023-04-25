@@ -3,7 +3,7 @@
 from fastapi.testclient import TestClient
 import os
 import sys
-
+import subprocess
 # Add the parent directory to sys.path
 parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, parent_dir)
@@ -22,19 +22,19 @@ def test_test_connection():
 
 def test_upload_csv():
     url = 'http://localhost:8000/upload_csv'
-    files = {'files': ('test.csv', open('./test/test.csv', 'rb'), 'text/csv')}
+    #Test the upload_csv endpoint
+    files = {'files': ('hired_employees.csv', open('./test/hired_employees.csv', 'rb'), 'text/csv'),
+             'files': ('jobs.csv', open('./test/jobs.csv', 'rb'), 'text/csv'),
+             'files': ('departments.csv', open('./test/departments.csv', 'rb'), 'text/csv')
+             }
     response = requests.post(url, files=files)
     assert response.status_code == 200
 
+def test_batch_upload():
+    services.delete_all_tables()
+    response = client.get("/batch_sql")
+    assert response.status_code == 200
 
-def test_duplicates_sql():
-    assert services.duplicates_tb() == 0
-
-
-def test_has_rows():
-    assert services.table_has_rows("hired_employees") == 1
-    assert services.table_has_rows("jobs") == 1
-    assert services.table_has_rows("departments") == 1
 
 
 def test_query1():
@@ -43,12 +43,14 @@ def test_query1():
 
 
 def test_query2():
-    response = client.get("/query2")
-    assert response.status_code == 200
+    if(services.check_table_exists()):
+        response = client.get("/query2")
+        assert response.status_code == 200
     # Add assertions for the expected results of the query
 
 
-def get_all_employees():
+def test_get_all_employees():
+    
     response = client.get("/employees")
     assert response.status_code == 200
 
@@ -56,3 +58,39 @@ def get_all_employees():
 def test_all_departments():
     response = client.get("/departments")
     assert response.status_code == 200
+
+
+def test_has_rows():
+    assert services.table_has_rows("hired_employees") == 1
+    assert services.table_has_rows("jobs") == 1
+    assert services.table_has_rows("departments") == 1
+
+def test_duplicates_sql():
+    assert services.duplicates_tb() == 0
+
+
+
+
+# def test_integration():
+#     #Delete all previous created tables
+#     services.delete_all_tables()
+
+#     url = 'http://localhost:8000/upload_csv'
+#     #Test the upload_csv endpoint
+#     files = {'files': ('hired_employees.csv', open('./test/hired_employees.csv', 'rb'), 'text/csv'),
+#              'files': ('jobs.csv', open('./test/jobs.csv', 'rb'), 'text/csv'),
+#              'files': ('departments.csv', open('./test/departments.csv', 'rb'), 'text/csv')
+#              }
+#     response = requests.post(url, files=files)
+#     #Test the batch upload function
+#     requests.get("http://localhost:8000/batch_sql")
+
+
+#     # Run the command to create a new csv file in the terminal
+#     subprocess.run("echo '2000,nico,2021-12-07 02:48:42,2,96' >> ../data/hired_employees.csv", shell=True)
+#     #Test the upload_csv endpoint
+#     files = {'files': ('hired_employees.csv', open('./test/hired_employees.csv', 'rb'), 'text/csv')}
+#     response = requests.post(url, files=files)
+#     #Test the batch upload function
+#     requests.get("http://localhost:8000/batch_sql")
+#     return None

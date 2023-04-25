@@ -47,6 +47,11 @@ async def duplicate():
 @app.get("/departments")
 async def get_departments():
     return _services.get_all_departments()
+
+@app.get("/jobs")
+async def get_jobs():
+    return _services.get_all_jobs
+
 @app.get("/employees")
 async def get_employees():
     return _services.get_all_employees()
