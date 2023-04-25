@@ -69,28 +69,3 @@ def test_duplicates_sql():
     assert services.duplicates_tb() == 0
 
 
-
-
-# def test_integration():
-#     #Delete all previous created tables
-#     services.delete_all_tables()
-
-#     url = 'http://localhost:8000/upload_csv'
-#     #Test the upload_csv endpoint
-#     files = {'files': ('hired_employees.csv', open('./test/hired_employees.csv', 'rb'), 'text/csv'),
-#              'files': ('jobs.csv', open('./test/jobs.csv', 'rb'), 'text/csv'),
-#              'files': ('departments.csv', open('./test/departments.csv', 'rb'), 'text/csv')
-#              }
-#     response = requests.post(url, files=files)
-#     #Test the batch upload function
-#     requests.get("http://localhost:8000/batch_sql")
-
-
-#     # Run the command to create a new csv file in the terminal
-#     subprocess.run("echo '2000,nico,2021-12-07 02:48:42,2,96' >> ../data/hired_employees.csv", shell=True)
-#     #Test the upload_csv endpoint
-#     files = {'files': ('hired_employees.csv', open('./test/hired_employees.csv', 'rb'), 'text/csv')}
-#     response = requests.post(url, files=files)
-#     #Test the batch upload function
-#     requests.get("http://localhost:8000/batch_sql")
-#     return None
