@@ -8,7 +8,8 @@ import shutil
 
 app = FastAPI()
 
-
+#TODO:
+# *CRUD
 @app.get("/test_connection", response_class=JSONResponse)
 async def test_connection():
     data = {"message": "Connection working"}
