@@ -154,7 +154,6 @@ def batch_upload() -> None:
     file_paths[1], file_paths[-1] = file_paths[-1], file_paths[1]
     [upload_df_to_sql(read_csv_cust(schema=schema, file=file_path), Path(file_path).stem) for file_path, schema in zip(file_paths, schemas)]
     # Add the constraints to the sql database
-    print("Agrego PKSSSSS")
     [add_constraints(Path(file_path).stem)for file_path in file_paths]
     # and in the case of 'hired_employees' we add also a foreign key constraint
     add_fk()
