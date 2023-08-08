@@ -7,7 +7,14 @@ import shutil
 # Create the app
 
 app = FastAPI()
+# Función que se ejecutará al inicio
+async def startup_event():
+    print("Cleaning database...")
+    _services.delete_all_tables()
 
+@app.on_event("startup")
+async def startup():
+    await startup_event()
 #TODO:
 # *CRUD
 @app.get("/test_connection", response_class=JSONResponse)

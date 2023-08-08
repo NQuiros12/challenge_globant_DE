@@ -4,3 +4,4 @@ jobs.csv
 test.csv
 test.ipynb
 *.DS_Store*
+*__pycache__*
