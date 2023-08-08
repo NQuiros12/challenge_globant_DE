@@ -271,5 +271,4 @@ def delete_all_tables() -> None:
         con.execute(sa.text(query))
         con.execute(sa.text(query1))
         con.execute(sa.text(query2))
-        con.commit()
         return None
