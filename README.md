@@ -10,7 +10,14 @@ pip install -r requirements.txt
 uvicorn main:app --reload
 ``` 
  <br>
-I created a client file to make it easy to use the API. It can also be tested using *POSTMAN* or CURL.
+I created a client html file to make it easy to use the API. It can also be tested using *POSTMAN* or CURL.
+All you have to do is go to localhost:8000/
+This should show this:
+
+![Home Page](./html.png)
+
+There browse for your files and upload them.
+
 ## Bonus Part
 As for the bonus part, I have implemented several tests in the "test" directory.
 The available tests are:
