@@ -1,22 +1,30 @@
-from fastapi import FastAPI
-from fastapi import UploadFile, File
-from fastapi.responses import JSONResponse
 from typing import List
+from fastapi import FastAPI, File, Request, UploadFile
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 import services as _services
 import shutil
 # Create the app
 
 app = FastAPI()
-# Función que se ejecutará al inicio
-async def startup_event():
-    print("Cleaning database...")
-    _services.delete_all_tables()
+templates = Jinja2Templates(directory="templates")
+
+@app.get("/",response_class=HTMLResponse)
+async def signin(request:Request):
+    return templates.TemplateResponse("index.html",context={"request":request})
+
+
+
 
 @app.on_event("startup")
 async def startup():
-    await startup_event()
+    await _services.startup_event()
 #TODO:
 # *CRUD
+
+
+
 @app.get("/test_connection", response_class=JSONResponse)
 async def test_connection():
     data = {"message": "Connection working"}
@@ -29,7 +37,7 @@ def upload(files: List[UploadFile] = File(...)):
     for file in files:
         with open("./data/"+file.filename, "wb") as buffer:
             shutil.copyfileobj(fsrc=file.file, fdst=buffer)
-    data = {"message": f"{file.filename} successfully uploaded"}
+    data = {"message": f"{len(files)} file/s successfully uploaded"}
     return JSONResponse(content=data, status_code=200)
 
 

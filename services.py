@@ -52,6 +52,12 @@ connect_string = f"mysql+pymysql://{user}:{password}@{host}:{port}/{database}?ch
 engine = create_engine(connect_string)
 
 
+# Función que se ejecutará al inicio
+async def startup_event():
+    print("Startup event")
+    #print("Cleaning database...")
+    #_services.delete_all_tables()
+
 def get_all_files(dir: str) -> list:
     # Return all files names from the data dir without extension
     files = [f.replace(".csv", "")
