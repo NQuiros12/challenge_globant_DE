@@ -75,9 +75,9 @@ async def upload_csv(file: UploadFile = File(...)) -> str:
 		buffer.write(await file.read())
 
 	return {"filename": file.filename}
+
+
 # Create the service of reading the csv
-
-
 def read_csv_cust(schema: str, file: str) -> pd.DataFrame:
 	if "hired_employees" in file:
 		df = pd.read_csv(file, names=schema_hired.keys(), dtype=schema_hired)
@@ -192,22 +192,46 @@ def duplicates_tb() -> int:
 
 def employees_x_job_department_2021() -> list:
 	query = """
-		select  
-			d.department,
-			j.job,
-			QUARTER(h.`datetime`) as quarter_id,
-			count(0) as hires
-		from hired_employees h
-		inner join jobs j 
-			on h.job_id = j.job_id
-		inner join departments d
-			on h.department_id = d.department_id
-		where year(h.datetime) = 2021
-		group by d.department,j.job,  QUARTER(h.`datetime`)
-		order by d.department,d.department ASC;"""
+		SELECT
+    department,
+    job,
+    SUM(CASE WHEN quarter = 1 THEN num_employees ELSE 0 END) AS Q1,
+    SUM(CASE WHEN quarter = 2 THEN num_employees ELSE 0 END) AS Q2,
+    SUM(CASE WHEN quarter = 3 THEN num_employees ELSE 0 END) AS Q3,
+    SUM(CASE WHEN quarter = 4 THEN num_employees ELSE 0 END) AS Q4
+FROM (
+    SELECT
+        department,
+        job,
+        YEAR(he.datetime) AS hire_year,
+        CASE
+            WHEN MONTH(he.datetime) BETWEEN 1 AND 3 THEN 1
+            WHEN MONTH(he.datetime) BETWEEN 4 AND 6 THEN 2
+            WHEN MONTH(he.datetime) BETWEEN 7 AND 9 THEN 3
+            ELSE 4
+        END AS quarter,
+        COUNT(*) AS num_employees
+    FROM
+        hired_employees he
+    join departments d on d.department_id = he.department_id
+    join jobs j on j.job_id = he.job_id
+    WHERE
+        YEAR(he.datetime) = 2021
+    GROUP BY
+        department,
+        job,
+        hire_year,
+        quarter
+) AS hires_by_quarter
+GROUP BY
+    department,
+    job
+ORDER BY
+    department,
+    job;"""
 	with engine.connect() as con:
 		result = con.execute(sa.text(query))
-		keys = ["department", "job", "quarter_id", "hires"]
+		keys = ["department", "job", "q1", "q2","q3","q4"]
 		rows = [dict(zip(keys, row)) for row in result.fetchall()]
 	return rows
 
