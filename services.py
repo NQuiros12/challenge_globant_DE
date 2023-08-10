@@ -35,8 +35,6 @@ schema_hired = {
 	"department_id": "Int64",
 	"job_id": "Int64"
 }
-
-
 schema_jobs = {
 	"job_id": "Int64",
 	"job": "object"
@@ -46,7 +44,7 @@ schema_department = {
 	"department": "object"
 }
 # Create a list with the desire order of the dicts
-schemas = [schema_hired, schema_jobs, schema_department]
+schemas = [schema_department,schema_jobs,schema_hired]
 # Connect to the database
 connect_string = f"mysql+pymysql://{user}:{password}@{host}:{port}/{database}?charset=utf8"
 engine = create_engine(connect_string)
@@ -57,12 +55,13 @@ async def startup_event():
 	print("Startup event")
 	#print("Cleaning database...")
 	delete_all_tables()
-	clean_data_dir()
+	#clean_data_dir()
 
 def get_all_files(dir: str) -> list:
 	# Return all files names from the data dir without extension
 	files = [f.replace(".csv", "")
 			 for f in os.listdir(dir) if not f.startswith('.')]
+	files.sort()
 	return files
 
 
@@ -105,6 +104,7 @@ def upload_df_to_sql(df: pd.DataFrame, table_name: str) -> None:
 def add_constraints(table_name: str) -> None:
 	# Use the engine to write the primary key constraint to the database
 	add_pk(table_name)
+	#pass
 
 
 def add_fk(table_name: str = "hired_employees") -> None:
@@ -120,10 +120,11 @@ def add_fk(table_name: str = "hired_employees") -> None:
 def add_pk(table_name: str) -> None:
 	with engine.connect() as con:
 		if ("hired_employees" not in table_name):
-			con.execute(
-				sa.text(f"alter table {table_name} add primary key ({table_name[:-1]}_id);"))
 			print(
 				f"alter table {table_name} add primary key ({table_name[:-1]}_id);")
+			con.execute(
+				sa.text(f"alter table {table_name} add primary key ({table_name[:-1]}_id);"))
+			
 			return None
 		else:
 			con.execute(
@@ -159,9 +160,11 @@ def batch_upload() -> None:
 	# Re arrange the file paths in order to execute first with 'jobs' and 'departments' and after the
 	# 'hired_employees' since the last one depends on the others.
 	file_paths[1], file_paths[-1] = file_paths[-1], file_paths[1]
+	#print(file_paths)
 	[upload_df_to_sql(read_csv_cust(schema=schema, file=file_path), Path(file_path).stem) for file_path, schema in zip(file_paths, schemas)]
+	#print([(file_path,schema) for file_path, schema in zip(file_paths, schemas)])
 	# Add the constraints to the sql database
-	[add_constraints(Path(file_path).stem)for file_path in file_paths]
+	[add_constraints(Path(file_path).stem) for file_path in file_paths]
 	# and in the case of 'hired_employees' we add also a foreign key constraint
 	add_fk()
 	return None

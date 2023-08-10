@@ -1,4 +1,4 @@
 *.csv
-test.ipynb
+*.ipynb
 *.DS_Store*
 *__pycache__*
