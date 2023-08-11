@@ -6,12 +6,18 @@ It has the endpoints to upload the files to a directory. And another endpoint fo
 To run this API run:
 
 ```
+python -m venv fastapi
+source fastapi/bin/activate
 pip install -r requirements.txt
+# Start the db
+docker build -t my-mysql .
+docker run -d -p 3307:3306 --name sqldb  my-mysql
+# Start the API
 uvicorn main:app --reload
 ``` 
  <br>
 I created a client html file to make it easy to use the API. It can also be tested using *POSTMAN* or CURL.
-All you have to do is go to localhost:8000/
+All you have to do is go to localhost:8000
 This should show this:
 
 ![Home Page](./html.png)
@@ -34,6 +40,6 @@ To run these tests, navigate to the root directory and execute:
 pytest test/testing.py
 ```
 ### For the rest of the bonus:
-Regarding the docker part, I have created a dockerfile and docker-compose.yaml file to create a Docker container with a MySQL database and the API running in the same container. It exposes localhost:3000 to provide access to the API's features.
+Regarding the docker part, I have created a dockerfile file to create a Docker container with a MySQL database.
 
 In terms of storing this API in the cloud, I have been exploring free deployment options. I found that "Railway" is a good choice, but unfortunately, I don't have time to learn about it and do it.

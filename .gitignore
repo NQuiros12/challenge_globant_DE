@@ -2,3 +2,5 @@
 *.ipynb
 *.DS_Store*
 *__pycache__*
+init_git.sh
+fastapi/
